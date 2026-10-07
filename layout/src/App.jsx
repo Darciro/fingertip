@@ -739,7 +739,7 @@ export default function App({ budget = DEFAULT_BUDGET }) {
                         onChange={selectMonth}
                     />
                     {!isMobile && (
-                        <a className="btn-primary btn-primary--sm" href="#nova">
+                        <a className="btn-primary btn-primary--sm xxx" href="#nova">
                             <Icon d={I.plus} size={18} width={2.4} />
                             Adicionar
                         </a>

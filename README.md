@@ -75,14 +75,14 @@ Sobe o servidor PHP e o Vite com hot reload. A aplicação fica disponível na U
 
 ### Qualidade de código
 
-| Comando               | O que faz                                          |
-| --------------------- | -------------------------------------------------- |
-| `composer test`       | Pint (checagem), PHPStan e testes Pest             |
-| `composer lint`       | Formata o código PHP com Pint                      |
-| `composer types:check`| Análise estática com PHPStan                       |
-| `npm run check`       | Lint e formatação do front-end                     |
-| `npm run types:check` | Checagem de tipos TypeScript                       |
-| `composer ci:check`   | Tudo acima de uma vez                              |
+| Comando                | O que faz                              |
+| ---------------------- | -------------------------------------- |
+| `composer test`        | Pint (checagem), PHPStan e testes Pest |
+| `composer lint`        | Formata o código PHP com Pint          |
+| `composer types:check` | Análise estática com PHPStan           |
+| `npm run check`        | Lint e formatação do front-end         |
+| `npm run types:check`  | Checagem de tipos TypeScript           |
+| `composer ci:check`    | Tudo acima de uma vez                  |
 
 ## Deploy em hospedagem compartilhada
 
@@ -122,10 +122,10 @@ O comando chama `scripts/deploy-package.sh`, que trabalha numa cópia em `.deplo
 5. **Prepara o `.env`** a partir do `.env.production`, ou gera um como descrito acima.
 6. **Cria as pastas graváveis** de `storage/` e `bootstrap/cache/` com permissão 775.
 7. **Move o conteúdo de `public/` para a raiz**, porque a hospedagem não permite apontar o domínio para `public/`:
-   - `build/`, favicons e `robots.txt` vão para a raiz;
-   - um `index.php` novo carrega `vendor/` e `bootstrap/` da mesma pasta e define a raiz como pasta pública (`usePublicPath`);
-   - um `.htaccess` novo mantém as regras do Laravel e **bloqueia o acesso web** a arquivos ocultos (`.env`), às pastas `app/`, `bootstrap/`, `config/`, `database/`, `lang/`, `resources/`, `routes/` e `vendor/`, e a `artisan` e `composer.*`;
-   - `storage/` só serve `storage/app/public`, pela URL `/storage/...`. Isso substitui o `php artisan storage:link`.
+    - `build/`, favicons e `robots.txt` vão para a raiz;
+    - um `index.php` novo carrega `vendor/` e `bootstrap/` da mesma pasta e define a raiz como pasta pública (`usePublicPath`);
+    - um `.htaccess` novo mantém as regras do Laravel e **bloqueia o acesso web** a arquivos ocultos (`.env`), às pastas `app/`, `bootstrap/`, `config/`, `database/`, `lang/`, `resources/`, `routes/` e `vendor/`, e a `artisan` e `composer.*`;
+    - `storage/` só serve `storage/app/public`, pela URL `/storage/...`. Isso substitui o `php artisan storage:link`.
 8. **Compacta** tudo em `.deploy/fingertip.zip`.
 
 ### Publicando manualmente
@@ -134,10 +134,10 @@ O comando chama `scripts/deploy-package.sh`, que trabalha numa cópia em `.deplo
 2. Confira se os arquivos ocultos `.env` e `.htaccess` foram extraídos.
 3. No painel, selecione **PHP 8.3+** e ative as extensões **`pdo_pgsql`** e **`pgsql`**.
 4. **Migrations**: como não há `artisan` no servidor, rode da sua máquina apontando para o banco de produção:
-   ```bash
-   php artisan migrate --force --env=production
-   ```
-   (O `--env=production` faz o Laravel ler o `.env.production`.)
+    ```bash
+    php artisan migrate --force --env=production
+    ```
+    (O `--env=production` faz o Laravel ler o `.env.production`.)
 5. Acesse o site e confirme que `https://seu-dominio/.env` e `https://seu-dominio/vendor/autoload.php` retornam **403**.
 6. **Apague o `fingertip.zip` do servidor**, porque ele contém o `.env`.
 
@@ -145,7 +145,7 @@ Para atualizar a aplicação, gere o pacote de novo e extraia por cima. Se houve
 
 ### Deploy automático (GitHub Actions + SSH)
 
-O workflow [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) publica a aplicação automaticamente a cada commit na `main`, **depois que o workflow `tests` passa**. Também pode ser disparado manualmente em *Actions → deploy → Run workflow*.
+O workflow [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) publica a aplicação automaticamente a cada commit na `main`, **depois que o workflow `tests` passa**. Também pode ser disparado manualmente em _Actions → deploy → Run workflow_.
 
 O que ele faz:
 
@@ -153,25 +153,25 @@ O que ele faz:
 2. Grava o `.env.production` a partir do secret `ENV_PRODUCTION` e roda `composer deploy:package`.
 3. Envia o `fingertip.zip` por `scp` para `~/.deploy/` no servidor.
 4. No servidor, via SSH:
-   - extrai o pacote numa pasta temporária;
-   - atualiza a app com `rsync --delete`. Arquivos que saíram do pacote são removidos, e o `storage/` (logs, sessões, uploads) é preservado, só ganhando as pastas que faltarem;
-   - roda `php artisan migrate --force` e `php artisan optimize`;
-   - apaga o zip e a pasta temporária.
+    - extrai o pacote numa pasta temporária;
+    - atualiza a app com `rsync --delete`. Arquivos que saíram do pacote são removidos, e o `storage/` (logs, sessões, uploads) é preservado, só ganhando as pastas que faltarem;
+    - roda `php artisan migrate --force` e `php artisan optimize`;
+    - apaga o zip e a pasta temporária.
 
 #### Configuração no GitHub
 
-Em *Settings → Environments*, crie o ambiente **`production`** e cadastre:
+Em _Settings → Environments_, crie o ambiente **`production`** e cadastre:
 
-| Tipo     | Nome              | Valor                                                                                   |
-| -------- | ----------------- | --------------------------------------------------------------------------------------- |
-| Secret   | `SSH_HOST`        | IP ou host SSH da Hostinger (hPanel → *Avançado → Acesso SSH*)                          |
-| Secret   | `SSH_PORT`        | Porta SSH (padrão da Hostinger: `65002`)                                                |
-| Secret   | `SSH_USER`        | Usuário SSH (ex.: `u134515347`)                                                         |
-| Secret   | `SSH_KEY`         | Chave **privada** de deploy (veja abaixo)                                               |
-| Secret   | `SSH_KNOWN_HOSTS` | Saída de `ssh-keyscan -p 65002 <host>`. Opcional, mas recomendado                       |
-| Secret   | `ENV_PRODUCTION`  | Conteúdo completo do `.env.production`                                                  |
-| Variable | `DEPLOY_PATH`     | Pasta da app relativa à home. Padrão: `domains/rickmanu.dev/public_html/fingertip`      |
-| Variable | `PHP_BIN`         | PHP de linha de comando no servidor. Padrão: `php`                                      |
+| Tipo     | Nome              | Valor                                                                              |
+| -------- | ----------------- | ---------------------------------------------------------------------------------- |
+| Secret   | `SSH_HOST`        | IP ou host SSH da Hostinger (hPanel → _Avançado → Acesso SSH_)                     |
+| Secret   | `SSH_PORT`        | Porta SSH (padrão da Hostinger: `65002`)                                           |
+| Secret   | `SSH_USER`        | Usuário SSH (ex.: `u134515347`)                                                    |
+| Secret   | `SSH_KEY`         | Chave **privada** de deploy (veja abaixo)                                          |
+| Secret   | `SSH_KNOWN_HOSTS` | Saída de `ssh-keyscan -p 65002 <host>`. Opcional, mas recomendado                  |
+| Secret   | `ENV_PRODUCTION`  | Conteúdo completo do `.env.production`                                             |
+| Variable | `DEPLOY_PATH`     | Pasta da app relativa à home. Padrão: `domains/rickmanu.dev/public_html/fingertip` |
+| Variable | `PHP_BIN`         | PHP de linha de comando no servidor. Padrão: `php`                                 |
 
 Para criar a chave de deploy:
 
@@ -179,7 +179,7 @@ Para criar a chave de deploy:
 ssh-keygen -t ed25519 -C "github-deploy-fingertip" -f ~/.ssh/fingertip_deploy -N ""
 ```
 
-- Cadastre o conteúdo de `~/.ssh/fingertip_deploy.pub` no hPanel, em *Acesso SSH → Chaves SSH*.
+- Cadastre o conteúdo de `~/.ssh/fingertip_deploy.pub` no hPanel, em _Acesso SSH → Chaves SSH_.
 - Cole o conteúdo de `~/.ssh/fingertip_deploy` (chave privada) no secret `SSH_KEY`.
 
 Se `php -v` via SSH mostrar uma versão abaixo de 8.3, defina `PHP_BIN` com o caminho do PHP 8.3 do servidor, por exemplo `/opt/alt/php83/usr/bin/php`. O workflow para com um erro claro se a versão for menor.

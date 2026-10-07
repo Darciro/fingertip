@@ -1,10 +1,10 @@
-import { useForm } from "@inertiajs/react";
-import type { FormEvent } from "react";
-import { useState } from "react";
-import Segmented from "@/components/segmented";
-import { store as storeExpense } from "@/actions/App/Http/Controllers/ExpenseController";
-import { store as storeIncome } from "@/actions/App/Http/Controllers/IncomeController";
-import type { CategoryId, TransactionType } from "@/lib/fingertip";
+import { useForm } from '@inertiajs/react';
+import type { FormEvent } from 'react';
+import { useState } from 'react';
+import Segmented from '@/components/segmented';
+import { store as storeExpense } from '@/actions/App/Http/Controllers/ExpenseController';
+import { store as storeIncome } from '@/actions/App/Http/Controllers/IncomeController';
+import type { CategoryId, TransactionType } from '@/lib/fingertip';
 import {
     categoriesFor,
     DEFAULT_CATEGORY,
@@ -16,11 +16,11 @@ import {
     SETTLED_LABELS,
     tint,
     todayISO,
-} from "@/lib/fingertip";
+} from '@/lib/fingertip';
 
 const TYPES = [
-    { id: "despesa", name: "Despesa", color: EXPENSE_COLOR },
-    { id: "receita", name: "Receita", color: INCOME_COLOR },
+    { id: 'despesa', name: 'Despesa', color: EXPENSE_COLOR },
+    { id: 'receita', name: 'Receita', color: INCOME_COLOR },
 ] as const;
 
 type Props = { onAdded: (date: string) => void };
@@ -30,25 +30,25 @@ type Props = { onAdded: (date: string) => void };
  * os erros voltam em `form.errors`.
  */
 export default function TransactionForm({ onAdded }: Props) {
-    const [type, setType] = useState<TransactionType>("despesa");
+    const [type, setType] = useState<TransactionType>('despesa');
     const form = useForm({
-        amount: "",
-        description: "",
+        amount: '',
+        description: '',
         date: todayISO(),
         category: DEFAULT_CATEGORY.despesa as CategoryId,
         settled: true,
     });
-    const [ok, setOk] = useState("");
-    const isIncome = type === "receita";
+    const [ok, setOk] = useState('');
+    const isIncome = type === 'receita';
 
     /** Limpa os avisos assim que o usuário volta a editar o formulário. */
     const touch = () => {
         form.clearErrors();
-        setOk("");
+        setOk('');
     };
     const changeType = (t: TransactionType) => {
         setType(t);
-        form.setData("category", DEFAULT_CATEGORY[t]);
+        form.setData('category', DEFAULT_CATEGORY[t]);
         touch();
     };
     const submit = (ev: FormEvent<HTMLFormElement>) => {
@@ -57,9 +57,9 @@ export default function TransactionForm({ onAdded }: Props) {
         form.post(isIncome ? storeIncome.url() : storeExpense.url(), {
             preserveScroll: true,
             onSuccess: () => {
-                form.reset("amount", "description");
+                form.reset('amount', 'description');
                 setOk(
-                    `${isIncome ? "Receita" : "Despesa"} adicionada em ${monthInfo(monthKey(date)).name}.`,
+                    `${isIncome ? 'Receita' : 'Despesa'} adicionada em ${monthInfo(monthKey(date)).name}.`,
                 );
                 onAdded(date);
             },
@@ -83,7 +83,7 @@ export default function TransactionForm({ onAdded }: Props) {
                         key={t.id}
                         type="button"
                         aria-pressed={type === t.id}
-                        className={type === t.id ? "is-on" : ""}
+                        className={type === t.id ? 'is-on' : ''}
                         style={
                             type === t.id
                                 ? {
@@ -109,7 +109,7 @@ export default function TransactionForm({ onAdded }: Props) {
                     aria-invalid={!!form.errors.amount}
                     style={isIncome ? { color: INCOME_COLOR } : undefined}
                     onChange={(e) => {
-                        form.setData("amount", maskAmount(e.target.value));
+                        form.setData('amount', maskAmount(e.target.value));
                         touch();
                     }}
                 />
@@ -119,13 +119,13 @@ export default function TransactionForm({ onAdded }: Props) {
                 <input
                     className="input"
                     placeholder={
-                        isIncome ? "Ex.: Salário" : "Ex.: Supermercado"
+                        isIncome ? 'Ex.: Salário' : 'Ex.: Supermercado'
                     }
                     maxLength={120}
                     value={form.data.description}
                     aria-invalid={!!form.errors.description}
                     onChange={(e) => {
-                        form.setData("description", e.target.value);
+                        form.setData('description', e.target.value);
                         touch();
                     }}
                 />
@@ -139,7 +139,7 @@ export default function TransactionForm({ onAdded }: Props) {
                         value={form.data.date}
                         aria-invalid={!!form.errors.date}
                         onChange={(e) => {
-                            form.setData("date", e.target.value);
+                            form.setData('date', e.target.value);
                             touch();
                         }}
                     />
@@ -147,15 +147,15 @@ export default function TransactionForm({ onAdded }: Props) {
                 <div className="field">
                     <span>Situação</span>
                     <Segmented
-                        label={isIncome ? "Receita recebida?" : "Despesa paga?"}
-                        value={form.data.settled ? "yes" : "no"}
+                        label={isIncome ? 'Receita recebida?' : 'Despesa paga?'}
+                        value={form.data.settled ? 'yes' : 'no'}
                         onChange={(v) => {
-                            form.setData("settled", v === "yes");
+                            form.setData('settled', v === 'yes');
                             touch();
                         }}
                         options={[
-                            { id: "yes", name: SETTLED_LABELS[type][0] },
-                            { id: "no", name: SETTLED_LABELS[type][1] },
+                            { id: 'yes', name: SETTLED_LABELS[type][0] },
+                            { id: 'no', name: SETTLED_LABELS[type][1] },
                         ]}
                     />
                 </div>
@@ -169,7 +169,7 @@ export default function TransactionForm({ onAdded }: Props) {
                             <button
                                 key={c.id}
                                 type="button"
-                                className={`cat-choice ${on ? "is-on" : ""}`}
+                                className={`cat-choice ${on ? 'is-on' : ''}`}
                                 aria-pressed={on}
                                 style={
                                     on
@@ -180,7 +180,7 @@ export default function TransactionForm({ onAdded }: Props) {
                                         : undefined
                                 }
                                 onClick={() => {
-                                    form.setData("category", c.id);
+                                    form.setData('category', c.id);
                                     touch();
                                 }}
                             >
@@ -210,10 +210,10 @@ export default function TransactionForm({ onAdded }: Props) {
                 disabled={form.processing}
             >
                 {form.processing
-                    ? "Salvando…"
+                    ? 'Salvando…'
                     : isIncome
-                      ? "Adicionar receita"
-                      : "Adicionar despesa"}
+                      ? 'Adicionar receita'
+                      : 'Adicionar despesa'}
             </button>
         </form>
     );

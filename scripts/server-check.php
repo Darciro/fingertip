@@ -42,7 +42,7 @@ if ($url === '') {
     echo "        host: $host:$port\n";
 
     $sock = @fsockopen($host, $port, $errno, $errstr, 5);
-    echo $ok((bool) $sock)." conexão TCP de saída".($sock ? '' : " ($errno $errstr)")."\n";
+    echo $ok((bool) $sock).' conexão TCP de saída'.($sock ? '' : " ($errno $errstr)")."\n";
     $sock && fclose($sock);
 
     if (extension_loaded('pdo_pgsql')) {

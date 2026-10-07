@@ -126,7 +126,7 @@ export default function Dashboard({ budget, expenses, incomes }: Props) {
                         />
                         {!isMobile && (
                             <a
-                                className="btn-primary btn-primary--sm"
+                                className="btn-primary btn-primary--sm xxx"
                                 href="#nova"
                             >
                                 <Icon d={ICONS.plus} size={18} width={2.4} />
