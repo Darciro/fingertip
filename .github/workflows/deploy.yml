@@ -63,7 +63,16 @@ jobs:
             echo "::error::Secret ENV_PRODUCTION não configurado."
             exit 1
           fi
-          printf '%s\n' "$ENV_PRODUCTION" > .env.production
+          printf '%s\n' "$ENV_PRODUCTION" | tr -d '\r' > .env.production
+
+          # Falha antes do deploy se o secret estiver incompleto (o .env do servidor é substituído).
+          missing=0
+          grep -Eq '^APP_KEY=.+' .env.production || { echo "::error::ENV_PRODUCTION sem APP_KEY."; missing=1; }
+          grep -Eq '^(DB_URL|DATABASE_URL_UNPOOLED|DATABASE_URL|DB_HOST)=.+' .env.production \
+            || { echo "::error::ENV_PRODUCTION sem conexão de banco (DB_URL, DATABASE_URL_UNPOOLED, DATABASE_URL ou DB_HOST)."; missing=1; }
+          grep -Eq '^APP_ENV=production' .env.production || { echo "::error::ENV_PRODUCTION sem APP_ENV=production."; missing=1; }
+          echo "Variáveis definidas: $(grep -Eo '^[A-Z_]+=' .env.production | tr -d '=' | tr '\n' ' ')"
+          exit $missing
 
       - name: Build package
         run: composer deploy:package
