@@ -1,0 +1,25 @@
+@import 'tailwindcss';
+@import './fingertip.css' layer(components);
+
+@source '../views';
+@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
+
+/* Utilitários Tailwind apontando para os tokens do :root (ex.: bg-surface, text-muted, font-display) */
+@theme inline {
+    --font-sans: var(--font-body);
+    --font-heading: var(--font-display);
+    --radius-card: var(--radius);
+    --color-bg: var(--bg);
+    --color-surface: var(--surface);
+    --color-surface-2: var(--surface-2);
+    --color-line: var(--line);
+    --color-line-strong: var(--line-strong);
+    --color-text: var(--text);
+    --color-text-2: var(--text-2);
+    --color-muted: var(--muted);
+    --color-accent: var(--accent);
+    --color-on-accent: var(--on-accent);
+    --color-danger: var(--danger);
+    --color-income: var(--income);
+    --color-expense: var(--expense);
+}
