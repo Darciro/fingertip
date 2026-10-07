@@ -1,0 +1,135 @@
+name: deploy
+
+# Publica na Hostinger depois que o workflow "tests" passa na main.
+# Também pode ser disparado manualmente em Actions > deploy > Run workflow.
+on:
+  workflow_run:
+    workflows: [tests]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Um deploy por vez; um novo commit não cancela um deploy em andamento.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    environment: production
+
+    env:
+      SSH_HOST: ${{ secrets.SSH_HOST }}
+      SSH_PORT: ${{ secrets.SSH_PORT || '65002' }}
+      SSH_USER: ${{ secrets.SSH_USER }}
+      # Caminho da app relativo à home do usuário SSH.
+      DEPLOY_PATH: ${{ vars.DEPLOY_PATH || 'domains/rickmanu.dev/public_html/fingertip' }}
+      # PHP de linha de comando no servidor (ex.: /opt/alt/php83/usr/bin/php).
+      PHP_BIN: ${{ vars.PHP_BIN || 'php' }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+          persist-credentials: false
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # v2
+        with:
+          php-version: '8.3'
+          tools: composer:v2
+          coverage: none
+
+      - name: Setup Node
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '22'
+
+      # O build do Vite roda "php artisan wayfinder:generate", que precisa do vendor/ completo.
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --no-progress
+
+      - name: Write .env.production
+        env:
+          ENV_PRODUCTION: ${{ secrets.ENV_PRODUCTION }}
+        run: |
+          if [ -z "$ENV_PRODUCTION" ]; then
+            echo "::error::Secret ENV_PRODUCTION não configurado."
+            exit 1
+          fi
+          printf '%s\n' "$ENV_PRODUCTION" > .env.production
+
+      - name: Build package
+        run: composer deploy:package
+
+      - name: Setup SSH
+        env:
+          SSH_KEY: ${{ secrets.SSH_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          if [ -n "$SSH_KNOWN_HOSTS" ]; then
+            printf '%s\n' "$SSH_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          else
+            echo "::warning::SSH_KNOWN_HOSTS não configurado; confiando na chave obtida por ssh-keyscan."
+            ssh-keyscan -p "$SSH_PORT" "$SSH_HOST" > ~/.ssh/known_hosts
+          fi
+          cat > ~/.ssh/config <<EOF
+          Host deploy
+            HostName $SSH_HOST
+            Port $SSH_PORT
+            User $SSH_USER
+            IdentityFile ~/.ssh/id_deploy
+            IdentitiesOnly yes
+          EOF
+
+      - name: Upload package
+        run: |
+          ssh deploy 'mkdir -p ~/.deploy'
+          scp .deploy/fingertip.zip deploy:.deploy/fingertip.zip
+
+      - name: Release
+        run: |
+          ssh deploy "DEPLOY_PATH='$DEPLOY_PATH' PHP_BIN='$PHP_BIN' bash -s" <<'REMOTE'
+          set -euo pipefail
+
+          TARGET="$HOME/$DEPLOY_PATH"
+          RELEASE="$HOME/.deploy/fingertip"
+
+          "$PHP_BIN" -r 'exit(PHP_VERSION_ID >= 80300 ? 0 : 1);' \
+            || { echo "PHP da linha de comando é $("$PHP_BIN" -r 'echo PHP_VERSION;'); ajuste a variável PHP_BIN."; exit 1; }
+
+          echo "==> Extraindo pacote"
+          rm -rf "$RELEASE"
+          mkdir -p "$RELEASE" "$TARGET"
+          unzip -q "$HOME/.deploy/fingertip.zip" -d "$RELEASE"
+
+          echo "==> Atualizando arquivos em $TARGET"
+          # storage/ guarda logs, sessões e uploads: só cria o que estiver faltando.
+          rsync -a --ignore-existing "$RELEASE/storage/" "$TARGET/storage/"
+          # O resto é substituído; arquivos que não existem mais no pacote são removidos.
+          rsync -a --delete --exclude='/storage/' "$RELEASE/" "$TARGET/"
+
+          cd "$TARGET"
+
+          echo "==> Migrations"
+          "$PHP_BIN" artisan migrate --force
+
+          echo "==> Caches de produção"
+          "$PHP_BIN" artisan optimize
+
+          rm -rf "$RELEASE" "$HOME/.deploy/fingertip.zip"
+          echo "==> Deploy concluído"
+          REMOTE
+
+      - name: Cleanup
+        if: always()
+        run: rm -f ~/.ssh/id_deploy .env.production

@@ -128,7 +128,7 @@ O comando chama `scripts/deploy-package.sh`, que trabalha numa cópia em `.deplo
    - `storage/` só serve `storage/app/public`, pela URL `/storage/...`. Isso substitui o `php artisan storage:link`.
 8. **Compacta** tudo em `.deploy/fingertip.zip`.
 
-### Publicando
+### Publicando manualmente
 
 1. Envie o `fingertip.zip` pelo gerenciador de arquivos e extraia na pasta do domínio.
 2. Confira se os arquivos ocultos `.env` e `.htaccess` foram extraídos.
@@ -142,6 +142,49 @@ O comando chama `scripts/deploy-package.sh`, que trabalha numa cópia em `.deplo
 6. **Apague o `fingertip.zip` do servidor**, porque ele contém o `.env`.
 
 Para atualizar a aplicação, gere o pacote de novo e extraia por cima. Se houver migrations novas, rode o passo 4.
+
+### Deploy automático (GitHub Actions + SSH)
+
+O workflow [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) publica a aplicação automaticamente a cada commit na `main`, **depois que o workflow `tests` passa**. Também pode ser disparado manualmente em *Actions → deploy → Run workflow*.
+
+O que ele faz:
+
+1. Instala PHP 8.3, Composer e Node 22 e roda `composer install`. O build do Vite precisa do `vendor/` completo para gerar as rotas do Wayfinder.
+2. Grava o `.env.production` a partir do secret `ENV_PRODUCTION` e roda `composer deploy:package`.
+3. Envia o `fingertip.zip` por `scp` para `~/.deploy/` no servidor.
+4. No servidor, via SSH:
+   - extrai o pacote numa pasta temporária;
+   - atualiza a app com `rsync --delete`. Arquivos que saíram do pacote são removidos, e o `storage/` (logs, sessões, uploads) é preservado, só ganhando as pastas que faltarem;
+   - roda `php artisan migrate --force` e `php artisan optimize`;
+   - apaga o zip e a pasta temporária.
+
+#### Configuração no GitHub
+
+Em *Settings → Environments*, crie o ambiente **`production`** e cadastre:
+
+| Tipo     | Nome              | Valor                                                                                   |
+| -------- | ----------------- | --------------------------------------------------------------------------------------- |
+| Secret   | `SSH_HOST`        | IP ou host SSH da Hostinger (hPanel → *Avançado → Acesso SSH*)                          |
+| Secret   | `SSH_PORT`        | Porta SSH (padrão da Hostinger: `65002`)                                                |
+| Secret   | `SSH_USER`        | Usuário SSH (ex.: `u134515347`)                                                         |
+| Secret   | `SSH_KEY`         | Chave **privada** de deploy (veja abaixo)                                               |
+| Secret   | `SSH_KNOWN_HOSTS` | Saída de `ssh-keyscan -p 65002 <host>`. Opcional, mas recomendado                       |
+| Secret   | `ENV_PRODUCTION`  | Conteúdo completo do `.env.production`                                                  |
+| Variable | `DEPLOY_PATH`     | Pasta da app relativa à home. Padrão: `domains/rickmanu.dev/public_html/fingertip`      |
+| Variable | `PHP_BIN`         | PHP de linha de comando no servidor. Padrão: `php`                                      |
+
+Para criar a chave de deploy:
+
+```bash
+ssh-keygen -t ed25519 -C "github-deploy-fingertip" -f ~/.ssh/fingertip_deploy -N ""
+```
+
+- Cadastre o conteúdo de `~/.ssh/fingertip_deploy.pub` no hPanel, em *Acesso SSH → Chaves SSH*.
+- Cole o conteúdo de `~/.ssh/fingertip_deploy` (chave privada) no secret `SSH_KEY`.
+
+Se `php -v` via SSH mostrar uma versão abaixo de 8.3, defina `PHP_BIN` com o caminho do PHP 8.3 do servidor, por exemplo `/opt/alt/php83/usr/bin/php`. O workflow para com um erro claro se a versão for menor.
+
+> O `.env` do servidor é sempre substituído pelo do secret `ENV_PRODUCTION`. Para mudar uma configuração de produção, atualize o secret e rode o deploy de novo.
 
 ### Diagnóstico de erros no servidor
 
