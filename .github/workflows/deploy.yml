@@ -107,9 +107,18 @@ jobs:
           "$PHP_BIN" -r 'exit(PHP_VERSION_ID >= 80300 ? 0 : 1);' \
             || { echo "PHP da linha de comando é $("$PHP_BIN" -r 'echo PHP_VERSION;'); ajuste a variável PHP_BIN."; exit 1; }
 
+          # Não cria a pasta: um DEPLOY_PATH errado deve falhar, não publicar em outro lugar.
+          if [ ! -d "$TARGET" ]; then
+            echo "Pasta de destino não existe: $TARGET"
+            echo "Ajuste a variável DEPLOY_PATH (relativa a $HOME). Pastas public_html encontradas:"
+            find "$HOME" -maxdepth 4 -type d -name public_html 2>/dev/null
+            exit 1
+          fi
+          echo "==> Destino: $(cd "$TARGET" && pwd -P)"
+
           echo "==> Extraindo pacote"
           rm -rf "$RELEASE"
-          mkdir -p "$RELEASE" "$TARGET"
+          mkdir -p "$RELEASE"
           unzip -q "$HOME/.deploy/fingertip.zip" -d "$RELEASE"
 
           echo "==> Atualizando arquivos em $TARGET"
@@ -127,7 +136,8 @@ jobs:
           "$PHP_BIN" artisan optimize
 
           rm -rf "$RELEASE" "$HOME/.deploy/fingertip.zip"
-          echo "==> Deploy concluído"
+          echo "==> Deploy concluído em $TARGET"
+          ls -la "$TARGET" | head -20
           REMOTE
 
       - name: Cleanup
