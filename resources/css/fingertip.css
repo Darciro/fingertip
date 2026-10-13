@@ -133,6 +133,18 @@ h2 {
 .topbar > svg {
     flex: none;
 }
+.topbar__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.topbar__user {
+    max-width: 180px;
+    padding-left: 8px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
 .month-switcher {
     display: flex;
     align-items: center;
@@ -331,15 +343,6 @@ h2 {
     flex: 1 1 340px;
     min-width: 0;
 }
-.row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 24px;
-    align-items: flex-start;
-}
-.row > .card {
-    flex: 1 1 320px;
-}
 
 /* gráfico receitas × despesas */
 .legend {
@@ -377,6 +380,13 @@ h2 {
 }
 .bar:hover {
     opacity: 0.8;
+}
+/* a barra de carregamento do Inertia também usa .bar: neutraliza os estilos do gráfico */
+#nprogress .bar {
+    height: 2px;
+    padding: 0;
+    border-radius: 0;
+    opacity: 1;
 }
 .bar.is-on {
     opacity: 1;
@@ -650,6 +660,57 @@ h2 {
     color: var(--success-text);
 }
 
+/* autenticação */
+.auth {
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    padding: 32px 16px;
+}
+.auth__box {
+    width: 100%;
+    max-width: 420px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+.auth__logo {
+    align-self: center;
+}
+.auth__form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+.auth__foot {
+    margin: 0;
+    text-align: center;
+}
+.auth__foot a {
+    color: var(--accent);
+    font-weight: 600;
+}
+.field__error {
+    color: var(--danger-text);
+    font-size: 13px;
+}
+.input[aria-invalid='true'] {
+    border-color: var(--danger);
+}
+.check {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    color: var(--text-2);
+    cursor: pointer;
+}
+.check input {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--accent);
+}
+
 /* mobile */
 .tabbar {
     display: none;
@@ -681,8 +742,7 @@ h2 {
         font-size: 22px;
     }
     .layout,
-    .layout__main,
-    .row {
+    .layout__main {
         gap: 14px;
     }
     .card {

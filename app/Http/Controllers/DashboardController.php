@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Expense;
-use App\Models\Income;
+use App\Models\User;
+use Illuminate\Container\Attributes\CurrentUser;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -16,17 +16,17 @@ class DashboardController extends Controller
     private const MONTHS = 6;
 
     /**
-     * Dashboard com as receitas e despesas dos últimos meses.
+     * Dashboard com as receitas e despesas dos últimos meses do usuário logado.
      */
-    public function __invoke(): Response
+    public function __invoke(#[CurrentUser] User $user): Response
     {
         $since = now()->startOfMonth()->subMonths(self::MONTHS - 1)->toDateString();
         $columns = ['id', 'description', 'amount', 'date', 'category', 'settled'];
 
         return Inertia::render('dashboard', [
             'budget' => self::BUDGET,
-            'expenses' => Expense::query()->where('date', '>=', $since)->orderByDesc('date')->get($columns),
-            'incomes' => Income::query()->where('date', '>=', $since)->orderByDesc('date')->get($columns),
+            'expenses' => $user->expenses()->where('date', '>=', $since)->orderByDesc('date')->get($columns),
+            'incomes' => $user->incomes()->where('date', '>=', $since)->orderByDesc('date')->get($columns),
         ]);
     }
 }

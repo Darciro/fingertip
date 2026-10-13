@@ -7,6 +7,7 @@ export const ICONS = {
     trash: 'M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3',
     list: 'M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01',
     chart: 'M4 20V10M10 20V4M16 20v-7M22 20H2',
+    logout: 'M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3M10 17l-5-5 5-5M5 12h11',
 };
 
 type Props = { d: string; size?: number; width?: number; color?: string };

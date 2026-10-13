@@ -1,5 +1,6 @@
-import { Head, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useEffect, useMemo, useState } from 'react';
+import { destroy as logout } from '@/actions/App/Http/Controllers/Auth/AuthenticatedSessionController';
 import { destroy as destroyExpense } from '@/actions/App/Http/Controllers/ExpenseController';
 import { destroy as destroyIncome } from '@/actions/App/Http/Controllers/IncomeController';
 import CashflowChart from '@/components/cashflow-chart';
@@ -64,6 +65,7 @@ export default function Dashboard({ budget, expenses, incomes }: Props) {
     const [bdType, setBdType] = useState<TransactionType>('despesa');
     const [view, setView] = useState<View>('list'); // usado só no mobile
     const isMobile = useMediaQuery('(max-width: 760px)');
+    const { user } = usePage().props.auth;
 
     const info = monthInfo(month);
     const monthItems = useMemo(
@@ -124,15 +126,36 @@ export default function Dashboard({ budget, expenses, incomes }: Props) {
                             value={month}
                             onChange={selectMonth}
                         />
-                        {!isMobile && (
-                            <a
-                                className="btn-primary btn-primary--sm xxx"
-                                href="#nova"
+                        <div className="topbar__actions">
+                            {!isMobile && (
+                                <a
+                                    className="btn-primary btn-primary--sm xxx"
+                                    href="#nova"
+                                >
+                                    <Icon
+                                        d={ICONS.plus}
+                                        size={18}
+                                        width={2.4}
+                                    />
+                                    Adicionar
+                                </a>
+                            )}
+                            {!isMobile && user && (
+                                <span className="topbar__user muted small">
+                                    {user.name}
+                                </span>
+                            )}
+                            <Link
+                                href={logout.url()}
+                                method="post"
+                                as="button"
+                                className="icon-btn icon-btn--ghost"
+                                aria-label="Sair"
+                                title="Sair"
                             >
-                                <Icon d={ICONS.plus} size={18} width={2.4} />
-                                Adicionar
-                            </a>
-                        )}
+                                <Icon d={ICONS.logout} />
+                            </Link>
+                        </div>
                     </header>
 
                     {visible('list') && (
@@ -146,27 +169,25 @@ export default function Dashboard({ budget, expenses, incomes }: Props) {
 
                     <div className="layout">
                         <div className="layout__main">
-                            <div className="row">
-                                {visible('charts') && (
-                                    <CashflowChart
-                                        months={months}
-                                        totals={totals}
-                                        selected={month}
-                                        onSelect={selectMonth}
-                                    />
-                                )}
-                                {visible('list') && (
-                                    <TransactionList
-                                        monthName={info.name}
-                                        items={monthItems}
-                                        show={show}
-                                        onShow={changeShow}
-                                        cat={cat}
-                                        onCat={setCat}
-                                        onRemove={remove}
-                                    />
-                                )}
-                            </div>
+                            {visible('charts') && (
+                                <CashflowChart
+                                    months={months}
+                                    totals={totals}
+                                    selected={month}
+                                    onSelect={selectMonth}
+                                />
+                            )}
+                            {visible('list') && (
+                                <TransactionList
+                                    monthName={info.name}
+                                    items={monthItems}
+                                    show={show}
+                                    onShow={changeShow}
+                                    cat={cat}
+                                    onCat={setCat}
+                                    onRemove={remove}
+                                />
+                            )}
                             {visible('charts') && (
                                 <CategoryBreakdown
                                     items={monthItems}

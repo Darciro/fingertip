@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Enums\ExpenseCategory;
 use App\Models\Expense;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -19,6 +20,7 @@ class ExpenseFactory extends Factory
     public function definition(): array
     {
         return [
+            'user_id' => User::factory(),
             'description' => fake()->words(2, true),
             'amount' => fake()->randomFloat(2, 5, 500),
             'date' => fake()->dateTimeBetween('-2 months')->format('Y-m-d'),
