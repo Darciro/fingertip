@@ -2,6 +2,12 @@
 
 use App\Enums\ExpenseCategory;
 use App\Models\Expense;
+use App\Models\User;
+
+beforeEach(function () {
+    $this->user = User::factory()->create();
+    $this->actingAs($this->user);
+});
 
 test('an expense is stored from the form', function () {
     $this->post(route('expenses.store'), [
@@ -13,7 +19,8 @@ test('an expense is stored from the form', function () {
     ])->assertRedirect()->assertSessionHasNoErrors();
 
     $expense = Expense::sole();
-    expect($expense->description)->toBe('Supermercado')
+    expect($expense->user_id)->toBe($this->user->id)
+        ->and($expense->description)->toBe('Supermercado')
         ->and($expense->amount)->toBe(1234.56)
         ->and($expense->date->toDateString())->toBe('2026-10-06')
         ->and($expense->settled)->toBeFalse()
@@ -40,9 +47,17 @@ test('the form is validated', function (array $input, string $field, string $mes
 ]);
 
 test('an expense can be deleted', function () {
-    $expense = Expense::factory()->create();
+    $expense = Expense::factory()->for($this->user)->create();
 
     $this->delete(route('expenses.destroy', $expense))->assertRedirect();
 
     expect(Expense::count())->toBe(0);
+});
+
+test('another user expense cannot be deleted', function () {
+    $expense = Expense::factory()->create();
+
+    $this->delete(route('expenses.destroy', $expense))->assertForbidden();
+
+    expect(Expense::count())->toBe(1);
 });

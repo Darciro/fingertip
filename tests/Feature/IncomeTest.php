@@ -2,6 +2,12 @@
 
 use App\Enums\IncomeCategory;
 use App\Models\Income;
+use App\Models\User;
+
+beforeEach(function () {
+    $this->user = User::factory()->create();
+    $this->actingAs($this->user);
+});
 
 test('an income is stored from the form', function () {
     $this->post(route('incomes.store'), [
@@ -13,7 +19,8 @@ test('an income is stored from the form', function () {
     ])->assertRedirect()->assertSessionHasNoErrors();
 
     $income = Income::sole();
-    expect($income->description)->toBe('Salário')
+    expect($income->user_id)->toBe($this->user->id)
+        ->and($income->description)->toBe('Salário')
         ->and($income->amount)->toBe(1234.56)
         ->and($income->date->toDateString())->toBe('2026-10-06')
         ->and($income->settled)->toBeFalse()
@@ -40,9 +47,17 @@ test('the form is validated', function (array $input, string $field, string $mes
 ]);
 
 test('an income can be deleted', function () {
-    $income = Income::factory()->create();
+    $income = Income::factory()->for($this->user)->create();
 
     $this->delete(route('incomes.destroy', $income))->assertRedirect();
 
     expect(Income::count())->toBe(0);
+});
+
+test('another user income cannot be deleted', function () {
+    $income = Income::factory()->create();
+
+    $this->delete(route('incomes.destroy', $income))->assertForbidden();
+
+    expect(Income::count())->toBe(1);
 });

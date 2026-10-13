@@ -1,0 +1,13 @@
+#!/bin/sh
+# Roda o PHPStan antes de cada commit que altera arquivos PHP.
+# Para pular em uma emergência: git commit --no-verify
+
+if ! git diff --cached --name-only --diff-filter=ACMR | grep -q '\.php$'; then
+    exit 0
+fi
+
+echo "pre-commit: rodando PHPStan..."
+composer types:check --no-interaction || {
+    echo "pre-commit: PHPStan encontrou erros; commit cancelado."
+    exit 1
+}
