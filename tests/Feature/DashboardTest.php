@@ -42,3 +42,24 @@ test('the dashboard only lists the logged user records', function () {
             ->has('incomes', 0)
         );
 });
+
+test('the dashboard lists future installments', function () {
+    $user = User::factory()->create();
+    $this->actingAs($user);
+
+    Expense::factory()->for($user)->create([
+        'date' => now()->addMonths(3)->toDateString(),
+        'installment_group' => 'f3b0c7d2-1111-4c4c-9a9a-000000000001',
+        'installment' => 4,
+        'installments' => 10,
+    ]);
+
+    $this->get(route('home'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('expenses', 1)
+            ->where('expenses.0.installment', 4)
+            ->where('expenses.0.installments', 10)
+            ->where('expenses.0.installment_group', 'f3b0c7d2-1111-4c4c-9a9a-000000000001')
+        );
+});

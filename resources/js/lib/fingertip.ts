@@ -26,6 +26,10 @@ export type TransactionRecord = {
     date: string; // ISO "2026-10-06"
     category: CategoryId;
     settled: boolean; // despesa paga / receita recebida
+    // Só em despesas parceladas (uma linha por parcela, todas no mesmo grupo).
+    installment_group?: string | null;
+    installment?: number | null; // número da parcela (1, 2, …)
+    installments?: number | null; // total de parcelas
 };
 
 /** Despesa ou receita já com o tipo, como o extrato usa. */
@@ -56,7 +60,7 @@ export const INCOME_CATEGORIES: Category[] = [
         name: 'Investimentos',
         color: 'var(--cat-investimentos)',
     },
-    { id: 'outras', name: 'Outras receitas', color: 'var(--cat-outras)' },
+    { id: 'outras', name: 'Outras', color: 'var(--cat-outras)' },
 ];
 
 export const categoriesFor = (type: TransactionType) =>
@@ -140,6 +144,43 @@ export const monthInfo = (key: string) => {
         days: new Date(y, m, 0).getDate(),
     };
 };
+
+/** Mês `key` deslocado em `n` meses ("2026-11", 2 → "2027-01"). */
+export const addMonths = (key: string, n: number) => {
+    const [y, m] = key.split('-').map(Number);
+    return monthKey(new Date(y, m - 1 + n, 1));
+};
+
+/** Todos os meses de `from` até `to`, inclusive. */
+export const monthRange = (from: string, to: string) => {
+    const list: string[] = [];
+    for (let k = from; k <= to; k = addMonths(k, 1)) list.push(k);
+    return list;
+};
+
+/** Número máximo de parcelas (ExpenseController::MAX_INSTALLMENTS). */
+export const MAX_INSTALLMENTS = 120;
+
+/**
+ * Valor de cada parcela, igual ao ExpenseController::splitAmount: dividindo o total,
+ * a sobra dos centavos vai para a primeira parcela.
+ */
+export const splitAmount = (
+    amount: number,
+    count: number,
+    perInstallment: boolean,
+) => {
+    const cents = Math.round(amount * 100);
+    if (perInstallment) return Array<number>(count).fill(cents / 100);
+    const base = Math.floor(cents / count);
+    const list = Array<number>(count).fill(base / 100);
+    list[0] = (base + (cents % count)) / 100;
+    return list;
+};
+
+/** "1.234,56" → 1234.56 */
+export const parseAmount = (v: string) =>
+    Number(v.replace(/\./g, '').replace(',', '.')) || 0;
 
 /** Últimos `n` meses terminando no mês atual, do mais antigo ao mais recente. */
 export const lastMonths = (n = 6) => {

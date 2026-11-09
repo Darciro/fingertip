@@ -16,7 +16,8 @@ class DashboardController extends Controller
     private const MONTHS = 6;
 
     /**
-     * Dashboard com as receitas e despesas dos últimos meses do usuário logado.
+     * Dashboard com as receitas e despesas dos últimos meses do usuário logado,
+     * além das movimentações futuras (como as próximas parcelas de uma compra parcelada).
      */
     public function __invoke(#[CurrentUser] User $user): Response
     {
@@ -25,7 +26,9 @@ class DashboardController extends Controller
 
         return Inertia::render('dashboard', [
             'budget' => self::BUDGET,
-            'expenses' => $user->expenses()->where('date', '>=', $since)->orderByDesc('date')->get($columns),
+            // Sem limite superior: as parcelas futuras também vão para o dashboard.
+            'expenses' => $user->expenses()->where('date', '>=', $since)->orderByDesc('date')
+                ->get([...$columns, 'installment_group', 'installment', 'installments']),
             'incomes' => $user->incomes()->where('date', '>=', $since)->orderByDesc('date')->get($columns),
         ]);
     }

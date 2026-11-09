@@ -17,7 +17,18 @@ import type {
     TransactionRecord,
     TransactionType,
 } from '@/lib/fingertip';
-import { lastMonths, monthInfo, monthKey, ofType, sum } from '@/lib/fingertip';
+import {
+    addMonths,
+    lastMonths,
+    monthInfo,
+    monthKey,
+    monthRange,
+    ofType,
+    sum,
+} from '@/lib/fingertip';
+
+/** Meses exibidos no gráfico (DashboardController::MONTHS). */
+const CHART_MONTHS = 6;
 
 /* ---------- hooks ---------- */
 
@@ -58,14 +69,27 @@ export default function Dashboard({ budget, expenses, incomes }: Props) {
         ],
         [expenses, incomes],
     );
-    const months = useMemo(() => lastMonths(6), []);
-    const [month, setMonth] = useState(months[months.length - 1]);
+    const current = useMemo(() => monthKey(new Date()), []);
+    /** Últimos meses até o atual, mais os meses futuros que já têm movimentações (parcelas). */
+    const months = useMemo(() => {
+        const past = lastMonths(CHART_MONTHS);
+        const latest = items.reduce(
+            (max, e) => (monthKey(e.date) > max ? monthKey(e.date) : max),
+            current,
+        );
+        return monthRange(past[0], latest);
+    }, [items, current]);
+    const [picked, setMonth] = useState(current);
+    // Se o mês escolhido deixou de existir (ex.: as parcelas futuras foram excluídas), volta ao atual.
+    const month = months.includes(picked) ? picked : current;
     const [show, setShow] = useState<Show>('all');
     const [cat, setCat] = useState('all');
     const [bdType, setBdType] = useState<TransactionType>('despesa');
     const [view, setView] = useState<View>('list'); // usado só no mobile
     const isMobile = useMediaQuery('(max-width: 760px)');
     const { user } = usePage().props.auth;
+    const userName = user?.name ?? 'Usuário';
+    const initial = userName.trim().charAt(0).toUpperCase() || '?';
 
     const info = monthInfo(month);
     const monthItems = useMemo(
@@ -74,16 +98,21 @@ export default function Dashboard({ budget, expenses, incomes }: Props) {
     );
     const income = sum(ofType(monthItems, 'receita'));
     const expense = sum(ofType(monthItems, 'despesa'));
+    /** O gráfico mostra 6 meses, terminando no atual ou no mês futuro escolhido. */
+    const chartMonths = useMemo(() => {
+        const end = month > current ? month : current;
+        return monthRange(addMonths(end, 1 - CHART_MONTHS), end);
+    }, [month, current]);
     const totals = useMemo(
         () =>
-            months.map((k) => {
+            chartMonths.map((k) => {
                 const l = items.filter((e) => monthKey(e.date) === k);
                 return {
                     income: sum(ofType(l, 'receita')),
                     expense: sum(ofType(l, 'despesa')),
                 };
             }),
-        [items, months],
+        [items, chartMonths],
     );
 
     const selectMonth = (k: string) => {
@@ -102,16 +131,25 @@ export default function Dashboard({ budget, expenses, incomes }: Props) {
     };
     const added = (date: string) => {
         const k = monthKey(date);
-        if (months.includes(k)) selectMonth(k);
+        // Meses futuros só entram em `months` quando os novos dados chegam; basta não ser antigo demais.
+        if (k >= months[0]) selectMonth(k);
         if (isMobile) setView('list');
     };
-    const remove = (e: Transaction) =>
+    const remove = (e: Transaction) => {
+        if (
+            e.installments &&
+            !window.confirm(
+                `"${e.description}" é parcelada: todas as ${e.installments} parcelas serão excluídas. Continuar?`,
+            )
+        )
+            return;
         router.delete(
             e.type === 'receita'
                 ? destroyIncome.url(e.id)
                 : destroyExpense.url(e.id),
             { preserveScroll: true },
         );
+    };
     const visible = (v: View) => !isMobile || view === v;
 
     return (
@@ -125,11 +163,12 @@ export default function Dashboard({ budget, expenses, incomes }: Props) {
                             months={months}
                             value={month}
                             onChange={selectMonth}
+                            compact={isMobile}
                         />
                         <div className="topbar__actions">
                             {!isMobile && (
                                 <a
-                                    className="btn-primary btn-primary--sm xxx"
+                                    className="btn-primary btn-primary--sm"
                                     href="#nova"
                                 >
                                     <Icon
@@ -140,21 +179,49 @@ export default function Dashboard({ budget, expenses, incomes }: Props) {
                                     Adicionar
                                 </a>
                             )}
-                            {!isMobile && user && (
-                                <span className="topbar__user muted small">
-                                    {user.name}
-                                </span>
+                            {isMobile ? (
+                                <Link
+                                    href={logout.url()}
+                                    method="post"
+                                    as="button"
+                                    className="avatar-btn"
+                                    aria-label={`Conta de ${userName}: sair`}
+                                    title="Sair"
+                                    onBefore={() =>
+                                        window.confirm(
+                                            `Sair da conta de ${userName}?`,
+                                        )
+                                    }
+                                >
+                                    {initial}
+                                </Link>
+                            ) : (
+                                <div className="user-pill">
+                                    <span
+                                        className="user-pill__avatar"
+                                        aria-hidden="true"
+                                    >
+                                        {initial}
+                                    </span>
+                                    <span className="user-pill__name">
+                                        {userName}
+                                    </span>
+                                    <span
+                                        className="user-pill__divider"
+                                        aria-hidden="true"
+                                    />
+                                    <Link
+                                        href={logout.url()}
+                                        method="post"
+                                        as="button"
+                                        className="icon-btn user-pill__logout"
+                                        aria-label="Sair"
+                                        title="Sair"
+                                    >
+                                        <Icon d={ICONS.logout} size={18} />
+                                    </Link>
+                                </div>
                             )}
-                            <Link
-                                href={logout.url()}
-                                method="post"
-                                as="button"
-                                className="icon-btn icon-btn--ghost"
-                                aria-label="Sair"
-                                title="Sair"
-                            >
-                                <Icon d={ICONS.logout} />
-                            </Link>
                         </div>
                     </header>
 
@@ -171,7 +238,7 @@ export default function Dashboard({ budget, expenses, incomes }: Props) {
                         <div className="layout__main">
                             {visible('charts') && (
                                 <CashflowChart
-                                    months={months}
+                                    months={chartMonths}
                                     totals={totals}
                                     selected={month}
                                     onSelect={selectMonth}

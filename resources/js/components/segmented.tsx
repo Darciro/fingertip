@@ -4,6 +4,8 @@ type Props<T extends string> = {
     onChange: (id: T) => void;
     label: string;
     size?: 'sm' | 'md';
+    /** Ocupa a largura toda, com botões de tamanho igual (usado no formulário). */
+    block?: boolean;
 };
 
 export default function Segmented<T extends string>({
@@ -12,10 +14,11 @@ export default function Segmented<T extends string>({
     onChange,
     label,
     size = 'md',
+    block = false,
 }: Props<T>) {
     return (
         <div
-            className={`segmented segmented--${size}`}
+            className={`segmented segmented--${size}${block ? ' segmented--block' : ''}`}
             role="group"
             aria-label={label}
         >

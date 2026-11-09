@@ -136,14 +136,65 @@ h2 {
 .topbar__actions {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 20px;
 }
-.topbar__user {
+.topbar__actions .btn-primary--sm {
+    height: 48px;
+}
+/* cápsula do usuário: avatar, nome, divisor e sair */
+.user-pill {
+    display: flex;
+    align-items: center;
+    height: 48px;
+    padding: 0 2px 0 6px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+}
+.user-pill__avatar {
+    flex: none;
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    border-radius: 999px;
+    background: var(--surface-hover);
+    font-size: 14px;
+    font-weight: 600;
+}
+.user-pill__name {
     max-width: 180px;
-    padding-left: 8px;
+    padding: 0 14px 0 10px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    font-size: 14px;
+    font-weight: 500;
+}
+.user-pill__divider {
+    flex: none;
+    width: 1px;
+    height: 22px;
+    background: var(--line-strong);
+}
+.user-pill__logout {
+    color: var(--muted);
+}
+.user-pill__logout:hover {
+    color: var(--text);
+}
+/* mobile: só a inicial, num botão redondo */
+.avatar-btn {
+    flex: none;
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    font-size: 14px;
+    font-weight: 600;
 }
 .month-switcher {
     display: flex;
@@ -205,7 +256,7 @@ h2 {
     background: var(--surface);
     border: 1px solid var(--line);
     border-radius: var(--radius);
-    padding: 20px;
+    padding: 22px 24px;
     min-width: 0;
 }
 .card__head {
@@ -245,6 +296,20 @@ h2 {
 .segmented button.is-on {
     background: var(--surface-hover);
     color: var(--text);
+}
+.segmented--block {
+    display: grid;
+    grid-auto-columns: minmax(0, 1fr);
+    grid-auto-flow: column;
+    gap: 4px;
+    padding: 4px;
+    border-radius: 12px;
+}
+.segmented--block button {
+    height: 40px;
+    min-width: 0;
+    padding: 0 8px;
+    white-space: nowrap;
 }
 .type-toggle {
     display: grid;
@@ -286,7 +351,8 @@ h2 {
 .kpi {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 6px;
+    padding: 20px 22px;
 }
 .kpi__label {
     display: flex;
@@ -357,10 +423,10 @@ h2 {
     gap: 6px;
 }
 .bars {
-    height: 180px;
+    height: 190px;
     display: flex;
     gap: 8px;
-    margin-top: 18px;
+    margin-top: 20px;
 }
 .bar {
     flex: 1 1 0;
@@ -414,12 +480,13 @@ h2 {
 .totals {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 8px;
-    margin: 16px 0 0;
-    padding-top: 14px;
+    gap: 16px;
+    margin: 18px 0 0;
+    padding-top: 16px;
     border-top: 1px solid var(--line);
 }
 .totals dt {
+    margin-bottom: 2px;
     font-size: 12px;
     color: var(--muted);
 }
@@ -500,26 +567,33 @@ h2 {
     color: var(--muted);
 }
 .day {
-    margin-top: 14px;
+    margin-top: 22px;
 }
 .day__head {
     display: flex;
     justify-content: space-between;
-    padding: 6px 4px;
+    gap: 16px;
+    padding: 0 4px 8px;
     border-bottom: 1px solid var(--line);
     color: var(--muted);
     font-size: 13px;
     font-weight: 500;
 }
+/* colunas fixas: selo, valor e lixeira alinhados na vertical em todas as linhas */
 .tx {
-    display: flex;
+    display: grid;
+    grid-template-columns: 40px minmax(0, 1fr) 96px 132px 44px;
+    grid-template-areas:
+        'badge desc status amount remove'
+        'badge meta status amount remove';
     align-items: center;
-    gap: 12px;
-    padding: 10px 4px;
+    column-gap: 16px;
+    row-gap: 3px;
+    padding: 12px 4px;
     border-bottom: 1px solid var(--surface-2);
 }
 .tx__badge {
-    flex: none;
+    grid-area: badge;
     width: 40px;
     height: 40px;
     border-radius: 12px;
@@ -527,15 +601,41 @@ h2 {
     place-items: center;
     font: 700 16px var(--font-display);
 }
-.tx__text {
-    flex: 1 1 auto;
+.tx__meta {
+    grid-area: meta;
     min-width: 0;
     display: flex;
-    flex-direction: column;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 10px;
+    font-size: 13px;
+    color: var(--muted);
+}
+.tx .status {
+    grid-area: status;
+    justify-self: end;
+}
+.tx__amount {
+    grid-area: amount;
+    text-align: right;
+}
+.tx__remove {
+    grid-area: remove;
+}
+.tag {
+    padding: 1px 8px;
+    border-radius: 99px;
+    background: var(--surface-hover);
+    color: var(--text-2);
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
 }
 .status {
-    flex: none;
-    padding: 3px 9px;
+    display: inline-flex;
+    align-items: center;
+    height: 28px;
+    padding: 0 12px;
     border-radius: 999px;
     font-size: 12px;
     font-weight: 600;
@@ -550,6 +650,9 @@ h2 {
     background: color-mix(in srgb, var(--accent) 13%, transparent);
 }
 .tx__desc {
+    grid-area: desc;
+    align-self: end;
+    min-width: 0;
     font-weight: 500;
     white-space: nowrap;
     overflow: hidden;
@@ -560,58 +663,38 @@ h2 {
 .form {
     display: flex;
     flex-direction: column;
-    gap: 16px;
-    padding: 22px;
+    gap: 20px;
+    padding: 24px;
 }
 .form h2 {
     font-size: 20px;
 }
 .form > p {
-    margin: -12px 0 0;
+    margin: -16px 0 -2px;
 }
 .field {
     display: flex;
     flex-direction: column;
-    gap: 6px;
+    gap: 8px;
     border: 0;
     margin: 0;
     padding: 0;
     min-width: 0;
 }
 .field > span,
-.field > legend {
+.field > legend,
+.installments__count > span {
     font-size: 13px;
     font-weight: 500;
     color: var(--text-2);
     padding: 0;
-    margin-bottom: 6px;
 }
-.field > span {
-    margin-bottom: 0;
-}
-.field-row {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
-}
-.field-row .input {
-    width: 100%;
-    min-width: 0;
-}
-.field-row .segmented {
-    flex: none;
-    height: 48px;
-    border-radius: 12px;
-}
-.field-row .segmented button {
-    flex: 1 1 0;
-    min-width: 0;
-    height: auto;
-    padding: 0 6px;
-    font-size: 13px;
-    white-space: nowrap;
+.field > legend {
+    margin-bottom: 8px;
 }
 .input {
+    width: 100%;
+    min-width: 0;
     height: 48px;
     padding: 0 14px;
     border-radius: 12px;
@@ -638,14 +721,82 @@ h2 {
     display: flex;
     align-items: center;
     gap: 10px;
-    height: 44px;
+    min-width: 0;
+    height: 46px;
     padding: 0 12px;
     border-radius: 12px;
     border: 1px solid var(--line-strong);
     background: var(--bg);
     font-size: 14px;
     text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
 }
+/* parcelamento (formulário) */
+.installments {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+    border: 1px solid var(--line-strong);
+    border-radius: 14px;
+    background: var(--surface-2);
+}
+/* contador: rótulo à esquerda, botões à direita */
+.installments__count {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+.stepper {
+    flex: none;
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--line-strong);
+    border-radius: 12px;
+    background: var(--bg);
+}
+.stepper .icon-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 11px;
+    font-size: 20px;
+    color: var(--text);
+}
+.stepper .icon-btn:not(:disabled):hover {
+    background: var(--surface-2);
+}
+.stepper input {
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    text-align: center;
+    font-weight: 600;
+}
+.stepper input:focus-visible {
+    outline-offset: -2px;
+}
+.stepper input[aria-invalid='true'] {
+    color: var(--danger-text);
+}
+.installments__summary {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 0;
+    padding-top: 14px;
+    border-top: 1px solid var(--line-strong);
+}
+.installments__summary strong {
+    font-weight: 600;
+}
+.installments__summary .muted {
+    line-height: 1.5;
+}
+
 .notice {
     padding: 10px 12px;
     border-radius: 10px;
@@ -736,7 +887,7 @@ h2 {
         margin-bottom: 16px;
     }
     .kpi {
-        padding: 14px;
+        padding: 16px;
     }
     .kpi__value {
         font-size: 22px;
@@ -746,8 +897,83 @@ h2 {
         gap: 14px;
     }
     .card {
-        padding: 16px;
-        border-radius: 16px;
+        padding: 20px;
+        border-radius: 20px;
+    }
+    .month-switcher {
+        gap: 0;
+        padding: 2px;
+    }
+    .month-switcher .icon-btn {
+        width: 40px;
+        height: 40px;
+    }
+    .month-switcher__label {
+        min-width: 72px;
+    }
+    /* movimentação em duas linhas: descrição e valor / categoria e situação */
+    .tx {
+        grid-template-columns: 40px minmax(0, 1fr) auto 40px;
+        grid-template-areas:
+            'badge desc amount remove'
+            'badge meta status remove';
+        column-gap: 12px;
+        row-gap: 6px;
+        padding: 14px 0;
+    }
+    .tx__desc {
+        align-self: baseline;
+    }
+    .tx__amount {
+        align-self: baseline;
+    }
+    .tx-card {
+        padding-inline: 14px;
+    }
+    .tx__meta {
+        flex-wrap: nowrap;
+        gap: 8px;
+        white-space: nowrap;
+    }
+    /* a categoria encolhe com reticências; a etiqueta de parcela fica sempre visível */
+    .tx__meta > span:first-child {
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .tx__meta > .tag {
+        flex: none;
+    }
+    .tx .status {
+        height: 26px;
+        padding: 0 10px;
+    }
+    .tx__remove {
+        width: 40px;
+    }
+    .day {
+        margin-top: 20px;
+    }
+    /* gráficos: receitas, despesas e saldo um por linha */
+    .totals {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 10px;
+        margin-top: 16px;
+        font-size: 14px;
+    }
+    .totals > div {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+    }
+    .totals dt {
+        margin: 0;
+        font-size: 14px;
+    }
+    .bars {
+        height: 170px;
+        gap: 4px;
+        margin-top: 16px;
     }
     .form {
         border: 0;
@@ -755,8 +981,15 @@ h2 {
         padding: 4px 0;
     }
     .form .input,
-    .form .type-toggle {
+    .form .type-toggle,
+    .form > .field > .segmented {
         background: var(--surface);
+    }
+    .form .segmented--block button {
+        height: 42px;
+    }
+    .form .stepper .icon-btn {
+        width: 48px;
     }
     .segmented {
         flex: 1 1 100%;

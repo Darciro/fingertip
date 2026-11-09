@@ -18,11 +18,14 @@ use Illuminate\Support\Carbon;
  * @property Carbon $date
  * @property ExpenseCategory $category
  * @property bool $settled
+ * @property string|null $installment_group
+ * @property int|null $installment
+ * @property int|null $installments
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read User $user
  */
-#[Fillable(['description', 'amount', 'date', 'category', 'settled'])]
+#[Fillable(['description', 'amount', 'date', 'category', 'settled', 'installment_group', 'installment', 'installments'])]
 class Expense extends Model
 {
     /** @use HasFactory<ExpenseFactory> */
@@ -48,6 +51,8 @@ class Expense extends Model
         return [
             'amount' => 'float',
             'settled' => 'boolean',
+            'installment' => 'integer',
+            'installments' => 'integer',
             'date' => 'date:Y-m-d',
             'category' => ExpenseCategory::class,
         ];

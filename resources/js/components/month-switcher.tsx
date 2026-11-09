@@ -5,9 +5,16 @@ type Props = {
     months: string[];
     value: string;
     onChange: (key: string) => void;
+    /** Rótulo curto ("Nov 2026"), para caber no cabeçalho do mobile. */
+    compact?: boolean;
 };
 
-export default function MonthSwitcher({ months, value, onChange }: Props) {
+export default function MonthSwitcher({
+    months,
+    value,
+    onChange,
+    compact = false,
+}: Props) {
     const i = months.indexOf(value);
     const m = monthInfo(value);
     return (
@@ -22,7 +29,7 @@ export default function MonthSwitcher({ months, value, onChange }: Props) {
                 <Icon d={ICONS.prev} />
             </button>
             <span className="month-switcher__label">
-                {m.name} {m.year}
+                {compact ? m.short : m.name} {m.year}
             </span>
             <button
                 type="button"

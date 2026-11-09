@@ -53,7 +53,7 @@ export default function TransactionList({
     }, [list]);
 
     return (
-        <section className="card">
+        <section className="card tx-card">
             <header className="card__head card__head--center">
                 <h2>Movimentações de {monthName}</h2>
                 <Segmented
@@ -118,17 +118,23 @@ export default function TransactionList({
                                         >
                                             {c.name[0]}
                                         </span>
-                                        <div className="tx__text">
-                                            <span className="tx__desc">
-                                                {e.description}
-                                            </span>
-                                            <span className="muted small">
+                                        <span className="tx__desc">
+                                            {e.description}
+                                        </span>
+                                        <span className="tx__meta">
+                                            <span>
                                                 {isIncome
                                                     ? 'Receita'
                                                     : 'Despesa'}{' '}
                                                 · {c.name}
                                             </span>
-                                        </div>
+                                            {e.installments ? (
+                                                <span className="tag num">
+                                                    Parcela {e.installment}/
+                                                    {e.installments}
+                                                </span>
+                                            ) : null}
+                                        </span>
                                         <span
                                             className={`status ${e.settled ? 'is-settled' : 'is-pending'}`}
                                         >
@@ -139,7 +145,7 @@ export default function TransactionList({
                                             }
                                         </span>
                                         <strong
-                                            className="num nowrap"
+                                            className="tx__amount num nowrap"
                                             style={{
                                                 color: isIncome
                                                     ? INCOME_COLOR
@@ -151,7 +157,7 @@ export default function TransactionList({
                                         </strong>
                                         <button
                                             type="button"
-                                            className="icon-btn icon-btn--ghost"
+                                            className="tx__remove icon-btn icon-btn--ghost"
                                             aria-label={`Excluir ${e.description}`}
                                             onClick={() => onRemove(e)}
                                         >
